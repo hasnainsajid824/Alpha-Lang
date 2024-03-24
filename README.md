@@ -1,6 +1,6 @@
 # AlphaLang
 
-YourLanguageName is a simple programming language designed using python. It offers a concise syntax and powerful features to make programming more efficient and enjoyable.
+AlphaLang is a simple programming language designed using python. It offers a concise syntax and powerful features to make programming more efficient and enjoyable.
 
 ## Features
 
