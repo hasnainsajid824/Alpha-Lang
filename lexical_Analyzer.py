@@ -44,62 +44,43 @@ token_regex = '|'.join('(?P<{}>{})'.format(name, pattern) for name, pattern in t
 # Lexical analyzer function
 def lexical_analyzer(code):
     tokens = []
-    position = 0
+    symbol_table = SymbolTable()
+    lines = code.split('\n')
     line_number = 1
-    while position < len(code):
-        match = re.match(token_regex, code[position:])
-        if match:
-            token_name = match.lastgroup
-            token_value = match.group(token_name)
-            if token_name == 'WHITESPACE' or token_name == 'NEWLINE':
-                if token_name == 'NEWLINE':
-                    line_number += 1
+    for line in lines:
+        position = 0
+        while position < len(line):
+            match = re.match(token_regex, line[position:])
+            if match:
+                token_name = match.lastgroup
+                token_value = match.group(token_name)
+                if token_name == 'WHITESPACE' or token_name == 'NEWLINE':
+                    pass  # Ignore whitespace and newline tokens
+                else:
+                    symbol_table.add_symbol(token_value, line_number)  # Add identifier to symbol table
+                    tokens.append((token_name, token_value, line_number))
+                position += len(token_value)
             else:
-                tokens.append((token_name, token_value, line_number))
-            position += len(token_value)
-        else:
-            raise ValueError("Invalid token at position {}".format(position))
-    return tokens
+                raise ValueError("Invalid token at position {} in line {}".format(position, line_number))
+        line_number += 1
+    return tokens, symbol_table
 
 # Symbol Table class
 class SymbolTable:
     def __init__(self):
         self.symbols = {}
 
-    def add_symbol(self, name, datatype, line):
-        if name in self.symbols:
-            raise ValueError("Symbol {} already defined".format(name))
-        print("Adding symbol:", name, datatype, "at line:", line)
-        self.symbols[name] = (datatype, line)
+    def add_symbol(self, name, line_number):
+        if name not in self.symbols:
+            self.symbols[name] = []
+        self.symbols[name].append(line_number)
 
-    def get_datatype(self, name):
-        return self.symbols.get(name, None)
+    def display(self):
+        for symbol, line_numbers in self.symbols.items():
+            print("{} : {}".format(symbol, line_numbers))
 
-def syntax_analysis(tokens):
-    symbol_table = SymbolTable()
-    position = 0
-    while position < len(tokens):
-        token = tokens[position]
-        if token[0] == 'KEYWORD':
-            keyword = token[1]
-            if keyword in ['Num', 'Fl', 'Str', 'Bool', 'Char']:
-                position += 1
-                if position < len(tokens) and tokens[position][0] == 'IDENTIFIER':
-                    identifier = tokens[position][1]
-                    line_number = tokens[position][2]
-                    symbol_table.add_symbol(identifier, keyword, line_number)
-                    position += 1
-                    # Skip until the next statement end
-                    while position < len(tokens) and tokens[position][0] != 'STATEMENT_END':
-                        position += 1
-                else:
-                    raise SyntaxError("Expected identifier after datatype declaration")
-            else:
-                raise SyntaxError("Unknown keyword: {}".format(keyword))
-        position += 1  # Move to the next token
-    return symbol_table
 
-# Test the lexical analyzer and syntax analysis
+# Test the lexical analyzer
 if __name__ == '__main__':
     code = """
     Num @num_var = 10.
@@ -140,13 +121,9 @@ if __name__ == '__main__':
     .
     """
     try:
-        tokens = lexical_analyzer(code)
-        symbol_table = syntax_analysis(tokens)
+        tokens, symbol_table = lexical_analyzer(code)
         print("\nSymbol Table:")
-        for symbol, (datatype, line) in symbol_table.symbols.items():
-            print("{}: {} (Line {})".format(symbol, datatype, line))
+        symbol_table.display()
 
     except ValueError as e:
-        print(e)
-    except SyntaxError as e:
         print(e)
