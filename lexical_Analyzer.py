@@ -34,7 +34,8 @@ token_patterns = [
     ('COMP', r'==|<=|>=|<|>'),
     ('IDENTIFIER', r'\b[a-zA-Z][_a-zA-Z0-9]*\b'),  # Identifier must start with a letter
     ('NEWLINE', r'\n'),
-    ('WHITESPACE', r'\s+')
+    ('WHITESPACE', r'\s+'),
+    ('KEYWORD', r'\b(?:Num|Fl|Str|Bool|Char|iif|ielif|ielse|FR|WH|brk|cnt|Zero)\b')
 ]
 
 # Join token patterns into a single regular expression
@@ -44,29 +45,61 @@ token_regex = '|'.join('(?P<{}>{})'.format(name, pattern) for name, pattern in t
 def lexical_analyzer(code):
     tokens = []
     position = 0
+    line_number = 1
     while position < len(code):
         match = re.match(token_regex, code[position:])
         if match:
             token_name = match.lastgroup
             token_value = match.group(token_name)
             if token_name == 'WHITESPACE' or token_name == 'NEWLINE':
-                pass  # Ignore whitespace and newline tokens
-            elif token_name == 'IDENTIFIER' and token_value in ['Num', 'Fl', 'Str', 'Bool', 'Char', 'iif', 'ielif', 'ielse', 'FR', 'WH', 'brk', 'cnt', 'Zero']:
-                tokens.append(('KEYWORD', token_value))
-            elif token_name == 'AT':
-                tokens.append(('IDENTIFIER', token_value))
-            elif token_name == 'NUM_VAL':
-                tokens.append(('NUM_VAL', float(token_value)))  # Convert numerical value to float
-            elif token_name == 'STR_VAL':
-                tokens.append(('STR_VAL', token_value[1:-1]))  # Remove quotes from string value
+                if token_name == 'NEWLINE':
+                    line_number += 1
             else:
-                tokens.append((token_name, token_value))
+                tokens.append((token_name, token_value, line_number))
             position += len(token_value)
         else:
             raise ValueError("Invalid token at position {}".format(position))
     return tokens
 
-# Test the lexical analyzer
+# Symbol Table class
+class SymbolTable:
+    def __init__(self):
+        self.symbols = {}
+
+    def add_symbol(self, name, datatype, line):
+        if name in self.symbols:
+            raise ValueError("Symbol {} already defined".format(name))
+        print("Adding symbol:", name, datatype, "at line:", line)
+        self.symbols[name] = (datatype, line)
+
+    def get_datatype(self, name):
+        return self.symbols.get(name, None)
+
+def syntax_analysis(tokens):
+    symbol_table = SymbolTable()
+    position = 0
+    while position < len(tokens):
+        token = tokens[position]
+        if token[0] == 'KEYWORD':
+            keyword = token[1]
+            if keyword in ['Num', 'Fl', 'Str', 'Bool', 'Char']:
+                position += 1
+                if position < len(tokens) and tokens[position][0] == 'IDENTIFIER':
+                    identifier = tokens[position][1]
+                    line_number = tokens[position][2]
+                    symbol_table.add_symbol(identifier, keyword, line_number)
+                    position += 1
+                    # Skip until the next statement end
+                    while position < len(tokens) and tokens[position][0] != 'STATEMENT_END':
+                        position += 1
+                else:
+                    raise SyntaxError("Expected identifier after datatype declaration")
+            else:
+                raise SyntaxError("Unknown keyword: {}".format(keyword))
+        position += 1  # Move to the next token
+    return symbol_table
+
+# Test the lexical analyzer and syntax analysis
 if __name__ == '__main__':
     code = """
     Num @num_var = 10.
@@ -108,7 +141,12 @@ if __name__ == '__main__':
     """
     try:
         tokens = lexical_analyzer(code)
-        for token in tokens:
-            print(token)
+        symbol_table = syntax_analysis(tokens)
+        print("\nSymbol Table:")
+        for symbol, (datatype, line) in symbol_table.symbols.items():
+            print("{}: {} (Line {})".format(symbol, datatype, line))
+
     except ValueError as e:
+        print(e)
+    except SyntaxError as e:
         print(e)
