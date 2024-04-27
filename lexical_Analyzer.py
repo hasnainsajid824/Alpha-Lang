@@ -5,8 +5,7 @@ token_types = {
     'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br)\b',
     'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
     'OPERATOR': r'(?:<|>|<=|>=|==|!=|\+)',
-    'FUNCTION': r'@[_a-zA-Z][_a-zA-Z0-9]*\s*\(',
-    'VARIABLE': r'@[_a-zA-Z][_a-zA-Z0-9]*',
+    'Identifier': r'@[_a-zA-Z][_a-zA-Z0-9]*',
     'PROCEDURE': r'\b(?:FR|WH)\b',
     'CONSTANT': r'(?:\".*?\"|\'.*?\')',
     'LITERAL': r'\b(?:true|false|\d+\.\d*|\d+)\b',
@@ -32,35 +31,30 @@ def tokenize(code):
                 position += 1
                 continue
             match = None
-            for token_type, pattern in patterns.items():
-                match = pattern.match(line, position)
+            for token_type, pattern in token_types.items():
+                match = re.match(pattern, line[position:])
                 if match:
                     token = match.group(0)
-                    if token_type == 'VARIABLE':
-                        # Check if the previous token is a DATA_TYPE
+                    if token_type == 'Identifier':
                         prev_token_index = len(tokens) - 1
                         if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
-                            data_type = tokens[prev_token_index][1]
-                            tokens.append(('VARIABLE', token, line_number, data_type))
-                        else:
-                            tokens.append(('VARIABLE', token, line_number, None))
-                    elif token_type == 'FUNCTION':
-                        # Check if the previous token is a DATA_TYPE
-                        prev_token_index = len(tokens) - 1
-                        if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
-                            print(tokens[prev_token_index][1])
-                            data_type = tokens[prev_token_index][1]
+                            data_type = tokens[prev_token_index][1] if tokens[prev_token_index][0] else None
+
+                        if position + len(token) < len(line) and line[position + len(token)] == '(':
                             tokens.append(('FUNCTION', token, line_number, data_type))
                         else:
-                            tokens.append(('FUNCTION', token, line_number, None))
+                            tokens.append(('VARIABLE', token, line_number, data_type))
                     else:
                         tokens.append((token_type, token, line_number))
-                    position = match.end()
+                    position += len(token)
                     break
             if not match:
                 print(f"Lexical error: Unexpected character '{line[position]}' on line {line_number}")
                 position += 1
     return tokens
+
+
+
 
 # Function to build the symbol table
 def build_symbol_table(tokens):
