@@ -1,129 +1,129 @@
 import re
 
-# Regular expressions for tokens
-token_patterns = [
-    ('NUM', r'\bNum\b'),
-    ('FL', r'\bFl\b'),
-    ('STR', r'\bStr\b'),
-    ('BOOL', r'\bBool\b'),
-    ('CHAR', r'\bChar\b'),
-    ('IIF', r'\biif\b'),
-    ('IELIF', r'\bielif\b'),
-    ('IELSE', r'\bielse\b'),
-    ('FR', r'\bFR\b'),
-    ('WH', r'\bWH\b'),
-    ('BRK', r'\bbrk\b'),
-    ('CNT', r'\bcnt\b'),
-    ('ZERO', r'\bZero\b'),
-    ('AT', r'@[_a-zA-Z][_a-zA-Z0-9]*'),
-    ('NUM_VAL', r'\b\d+(\.\d+)?\b'),
-    ('STR_VAL', r'\".*?\"'),
-    ('BOOL_VAL', r'\btrue\b|\bfalse\b'),
-    ('STATEMENT_END', r'\.'),
-    ('COMMA', r','),
-    ('LPAREN', r'\('),
-    ('RPAREN', r'\)'),
-    ('LCURLY', r'\{'),
-    ('RCURLY', r'\}'),
-    ('PLUS', r'\+'),
-    ('MINUS', r'-'),
-    ('MUL', r'\*'),
-    ('DIV', r'/'),
-    ('MOD', r'%'),
-    ('ASSIGN', r'='),
-    ('COMP', r'==|<=|>=|<|>'),
-    ('IDENTIFIER', r'\b[a-zA-Z][_a-zA-Z0-9]*\b'),  # Identifier must start with a letter
-    ('NEWLINE', r'\n'),
-    ('WHITESPACE', r'\s+'),
-    ('KEYWORD', r'\b(?:Num|Fl|Str|Bool|Char|iif|ielif|ielse|FR|WH|brk|cnt|Zero)\b')
-]
+# Define token types
+token_types = {
+    'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br)\b',
+    'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
+    'OPERATOR': r'(?:<|>|<=|>=|==|!=|\+)',
+    'FUNCTION': r'@[_a-zA-Z][_a-zA-Z0-9]*\s*\(',
+    'VARIABLE': r'@[_a-zA-Z][_a-zA-Z0-9]*',
+    'PROCEDURE': r'\b(?:FR|WH)\b',
+    'CONSTANT': r'(?:\".*?\"|\'.*?\')',
+    'LITERAL': r'\b(?:true|false|\d+\.\d*|\d+)\b',
+    'ASSIGN': r'=',
+    'LCURLY': r'{',
+    'RCURLY': r'}',
+    'LPAREN': r'\(',
+    'RPAREN': r'\)',
+    'SEPERATOR': r'\,',
+    'STATEMENT_END': r'\.',
+}
 
-# Join token patterns into a single regular expression
-token_regex = '|'.join('(?P<{}>{})'.format(name, pattern) for name, pattern in token_patterns)
+# Create regular expressions for tokenization
+patterns = {token: re.compile(pattern) for token, pattern in token_types.items()}
 
-# Lexical analyzer function
-def lexical_analyzer(code):
+def tokenize(code):
     tokens = []
-    symbol_table = SymbolTable()
     lines = code.split('\n')
-    line_number = 1
-    for line in lines:
+    for line_number, line in enumerate(lines, start=1):
         position = 0
         while position < len(line):
-            match = re.match(token_regex, line[position:])
-            if match:
-                token_name = match.lastgroup
-                token_value = match.group(token_name)
-                if token_name == 'WHITESPACE' or token_name == 'NEWLINE':
-                    pass  # Ignore whitespace and newline tokens
-                else:
-                    symbol_table.add_symbol(token_value, line_number)  # Add identifier to symbol table
-                    tokens.append((token_name, token_value, line_number))
-                position += len(token_value)
-            else:
-                raise ValueError("Invalid token at position {} in line {}".format(position, line_number))
-        line_number += 1
-    return tokens, symbol_table
+            if line[position].isspace():  # Skip whitespace
+                position += 1
+                continue
+            match = None
+            for token_type, pattern in patterns.items():
+                match = pattern.match(line, position)
+                if match:
+                    token = match.group(0)
+                    if token_type == 'VARIABLE':
+                        # Check if the previous token is a DATA_TYPE
+                        prev_token_index = len(tokens) - 1
+                        if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
+                            data_type = tokens[prev_token_index][1]
+                            tokens.append(('VARIABLE', token, line_number, data_type))
+                        else:
+                            tokens.append(('VARIABLE', token, line_number, None))
+                    elif token_type == 'FUNCTION':
+                        # Check if the previous token is a DATA_TYPE
+                        prev_token_index = len(tokens) - 1
+                        if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
+                            print(tokens[prev_token_index][1])
+                            data_type = tokens[prev_token_index][1]
+                            tokens.append(('FUNCTION', token, line_number, data_type))
+                        else:
+                            tokens.append(('FUNCTION', token, line_number, None))
+                    else:
+                        tokens.append((token_type, token, line_number))
+                    position = match.end()
+                    break
+            if not match:
+                print(f"Lexical error: Unexpected character '{line[position]}' on line {line_number}")
+                position += 1
+    return tokens
 
-# Symbol Table class
-class SymbolTable:
-    def __init__(self):
-        self.symbols = {}
+# Function to build the symbol table
+def build_symbol_table(tokens):
+    symbol_table = {}
+    current_data_type = None
+    current_name = None
+    for token_type, lexeme, line_number, *data_type in tokens:
+        
+        current_data_type = data_type[0] if data_type else None
+        if token_type == 'VARIABLE':
+            current_name = lexeme
+            if current_name in symbol_table:
+                print(f"Error: Duplicate variable name '{current_name}' on line {line_number}")
+                continue
+            symbol_table[current_name] = {
+                'token_type': 'VARIABLE',
+                'data_type': current_data_type,
+                'line_number': line_number,
+                'value': None  # Default value for now, you can set it later
+            }
+        elif token_type == 'LITERAL':
+            if current_name is None:
+                print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
+                continue
+            symbol_table[current_name]['value'] = lexeme
+            current_name = None  # Reset current_name after assigning value
+        elif token_type == 'FUNCTION':
+            current_name = lexeme
+            if current_name in symbol_table:
+                print(f"Error: Duplicate function name '{current_name}' on line {line_number}")
+                continue
+            data_type = data_type[0] if data_type else None
+            symbol_table[current_name] = {
+                'token_type': 'FUNCTION',
+                'data_type': data_type,
+                'line_number': line_number,
+                'value': None  # Default value for now, you can set it later
+            }
+    return symbol_table
 
-    def add_symbol(self, name, line_number):
-        if name not in self.symbols:
-            self.symbols[name] = []
-        self.symbols[name].append(line_number)
 
-    def display(self):
-        for symbol, line_numbers in self.symbols.items():
-            print("{} : {}".format(symbol, line_numbers))
+# Read code from a file
+def read_code_from_file(filename):
+    with open(filename, 'r') as file:
+        code = file.read()
+    return code
 
 
-# Test the lexical analyzer
-if __name__ == '__main__':
-    code = """
-    Num @num_var = 10.
-    Fl @float_var = 3.14.
-    Str @string_var = "Hello, world!".
-    Bool @bool_var = true.
 
-    Num @n = 10.
-    Str @message = "".
-    iif @n < 10{
-       @message = "Number is less than 10".
-    }
-    ielif @n > 10{
-       @message = "Number is greater than 10".
-    }
-    ielse {
-       @message = "Number is 10".
-    }.
+code = read_code_from_file('code.txt')
 
-    FR (Num @i = 0. @i < 10. @i ++)
-    { 
-       @num_var = @num_var + @i.
-    }.
+# Tokenize the code
+tokens = tokenize(code)
 
-    WH (@float_var < 10) 
-    { 
-       @float_var = @float_var + 1.
-       cnt.
-    }.
+print("Tokens:-")
+for i in tokens:
+    print(i)
 
-    Zero @sum (Num @n1, Num @n2)
-    {
-       Num @res = @n1 + @n2.
-    }.
+# Build the symbol table
+symbol_table = build_symbol_table(tokens)
 
-    Num @result = @sum(5, 7).
 
-    .
-    """
-    try:
-        tokens, symbol_table = lexical_analyzer(code)
-        print("\nSymbol Table:")
-        symbol_table.display()
+print("Symbol Table:")
+for lexeme, info in symbol_table.items():
+    print(f"{lexeme}: {info}")
 
-    except ValueError as e:
-        print(e)

@@ -1,0 +1,34 @@
+Num @num_var = 10.
+Fl @float_var = 3.14.
+Str @string_var = "Hello, world!".
+Bool @bool_var = true.
+
+Num @n = 10.
+Str @message = "".
+iif @n < 10{
+   @message = "Number is less than 10".
+}
+ielif @n > 10{
+   @message = "Number is greater than 10".
+}
+ielse {
+   @message = "Number is 10".
+}.
+
+FR (Num @i = 0. @i < 10. @i ++)
+{ 
+   @num_var = @num_var + @i.
+}.
+
+WH (@float_var < 10) 
+{ 
+   @float_var = @float_var + 1.
+   cnt.
+}.
+
+Zero @sum (Num @n1, Num @n2)
+{
+   Num @res = @n1 + @n2.
+}.
+
+Num @result = @sum(5, 7).
