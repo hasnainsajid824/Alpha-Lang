@@ -39,7 +39,6 @@ class Parser:
         if self.current_token[0] == 'LCURLY':
             self.block()
         elif self.current_token[0] == 'RCURLY':
-            print('check', self.current_token[2])
             if self.block_stack:
                 self.block_stack.pop()
                 # return
@@ -90,7 +89,9 @@ class Parser:
         else:
             self.match('VARIABLE')
             self.match('ASSIGN')
-            self.expression()
+            while self.current_token[0] != 'STATEMENT_END':
+                if self.expression():
+                    break
             self.match('STATEMENT_END')
 
     def assignment(self):
@@ -157,25 +158,42 @@ class Parser:
             self.match('RPAREN')
             self.block()
 
-    def argument_list(self):
+    def argument_list(self):  
         while self.current_token and self.current_token[0] != 'RPAREN':
             if self.current_token[0] == 'DATA_TYPE':
                 self.match(self.current_token[0])
-                self.match('VARIABLE')
+                if self.current_token[0] == 'VARIABLE':
+                    self.match('VARIABLE')
+                else:
+                    print(f"Syntax error: Expected VARIABLE, found {self.current_token[1]} at line {self.current_token[2]}")
+                    self.advance()
             elif self.current_token[0] == 'VARIABLE':
                 self.match(self.current_token[0])
             elif self.current_token[0] == 'SEPERATOR':
                 self.match(self.current_token[0])
-            self.advance()
-        self.match('RPAREN')
+            elif self.current_token[0] == 'LITERAL':
+                self.match(self.current_token[0])
+
+            else:
+                print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                self.advance()
+
+        if self.current_token and self.current_token[0] == 'RPAREN':
+            self.match('RPAREN')
+            if self.current_token == 'None':
+                print(f'Syntax error: Value Missing At Last Line')
+                return True
+        else:
+            print(f"Syntax error: Expected RPAREN ")
+        return True
 
     def function_call(self):
         self.match('FUNCTION')
         self.match('LPAREN')
-        if self.current_token[0] != 'RPAREN':
-            self.argument_list()
-        self.match('STATEMENT_END')
-    
+        while self.current_token[0] != 'RPAREN':
+            if self.argument_list():
+                break
+        
     def function_definition(self):
         if self.current_token[1] == 'Zero':
             self.match('KEYWORD')
@@ -183,12 +201,11 @@ class Parser:
             self.match('DATA_TYPE')
         self.match('FUNCTION')
         self.match('LPAREN')
-        if self.current_token[0] != 'RPAREN':
-            self.argument_list()
-        print('check', self.current_token[2]) 
+        while self.current_token[0] != 'RPAREN':
+            if self.argument_list():
+                break
         self.block()
         self.match('RCURLY')
-        self.block_stack.pop()
 
     def block(self):
         if self.current_token == None:
