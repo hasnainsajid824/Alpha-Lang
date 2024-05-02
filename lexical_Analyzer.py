@@ -1,10 +1,12 @@
 import re
+from Syntax_Analyzer import Parser
+
 
 # Define token types
 token_types = {
     'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br)\b',
     'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
-    'OPERATOR': r'(?:<|>|<=|>=|==|!=|\+)',
+    'OPERATOR': r'(?:<=|>=|==|!=|\+\+|\-\-|\+|\-|\*|/|<|>)',
     'Identifier': r'@[_a-zA-Z][_a-zA-Z0-9]*',
     'PROCEDURE': r'\b(?:FR|WH)\b',
     'CONSTANT': r'(?:\".*?\"|\'.*?\')',
@@ -17,6 +19,7 @@ token_types = {
     'SEPERATOR': r'\,',
     'STATEMENT_END': r'\.',
 }
+
 
 # Create regular expressions for tokenization
 patterns = {token: re.compile(pattern) for token, pattern in token_types.items()}
@@ -39,7 +42,8 @@ def tokenize(code):
                         prev_token_index = len(tokens) - 1
                         if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
                             data_type = tokens[prev_token_index][1] if tokens[prev_token_index][0] else None
-
+                        while position + len(token) < len(line) and  line[position + len(token)].isspace():
+                                position += 1
                         if position + len(token) < len(line) and line[position + len(token)] == '(':
                             tokens.append(('FUNCTION', token, line_number, data_type))
                         else:
@@ -54,8 +58,6 @@ def tokenize(code):
     return tokens
 
 
-
-
 # Function to build the symbol table
 def build_symbol_table(tokens):
     symbol_table = {}
@@ -67,7 +69,7 @@ def build_symbol_table(tokens):
         if token_type == 'VARIABLE':
             current_name = lexeme
             if current_name in symbol_table:
-                print(f"Error: Duplicate variable name '{current_name}' on line {line_number}")
+                # print(f"Error: Duplicate variable name '{current_name}' on line {line_number}")
                 continue
             symbol_table[current_name] = {
                 'token_type': 'VARIABLE',
@@ -77,14 +79,14 @@ def build_symbol_table(tokens):
             }
         elif token_type == 'LITERAL':
             if current_name is None:
-                print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
+                # print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
                 continue
             symbol_table[current_name]['value'] = lexeme
             current_name = None  # Reset current_name after assigning value
         elif token_type == 'FUNCTION':
             current_name = lexeme
             if current_name in symbol_table:
-                print(f"Error: Duplicate function name '{current_name}' on line {line_number}")
+                # print(f"Error: Duplicate function name '{current_name}' on line {line_number}")
                 continue
             data_type = data_type[0] if data_type else None
             symbol_table[current_name] = {
@@ -109,15 +111,21 @@ code = read_code_from_file('code.txt')
 # Tokenize the code
 tokens = tokenize(code)
 
-print("Tokens:-")
-for i in tokens:
-    print(i)
+# print("Tokens:-")
+# for i in tokens:
+#     print(i)
 
 # Build the symbol table
 symbol_table = build_symbol_table(tokens)
 
 
-print("Symbol Table:")
-for lexeme, info in symbol_table.items():
-    print(f"{lexeme}: {info}")
+# print("Symbol Table:")
+# for lexeme, info in symbol_table.items():
+#     print(f"{lexeme}: {info}")
+
+# Instantiate the parser with the list of tokens
+parser = Parser(tokens)
+print('Parsing:')
+# Parse the code
+parser.parse()
 
