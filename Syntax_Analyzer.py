@@ -18,15 +18,16 @@ class Parser:
             self.advance()
         else:
             print(f"Syntax error: Expected {expected_token_type}, found {self.current_token[0] if self.current_token else 'EOF'} at line {self.current_token[2]}")
-            
+            sys.exit()
 
     def parse(self):
         self.program()
-        print('No Syntax Error were found')
+        
 
     def program(self):
         self.statement_list()
-
+        print('No Syntax Error were found')
+        sys.exit()
     def statement_list(self):
         while self.current_token:
             self.statement()
@@ -61,6 +62,9 @@ class Parser:
             self.function_call()
         elif self.current_token[0] == 'VARIABLE':
             self.assignment()
+        # elif self.current_token == 'END':
+        #         print('No Syntax Error were found')
+        #         sys.exit()
         elif self.current_token == None:
                 pass
         else:
@@ -88,11 +92,16 @@ class Parser:
                 self.function_definition()
         else:
             self.match('VARIABLE')
-            self.match('ASSIGN')
-            while self.current_token[0] != 'STATEMENT_END':
-                if self.expression():
-                    break
-            self.match('STATEMENT_END')
+            if self.current_token == None:
+                print('Syntax Error: Missing . at the end.')
+            elif self.current_token[0] == 'STATEMENT_END':
+                self.match('STATEMENT_END')
+            else:
+                self.match('ASSIGN')
+                while self.current_token[0] != 'STATEMENT_END':
+                    if self.expression():
+                        break
+                self.match('STATEMENT_END')
 
     def assignment(self):
         self.match('VARIABLE')

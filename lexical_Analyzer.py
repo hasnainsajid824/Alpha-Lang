@@ -1,6 +1,6 @@
 import re
 from Syntax_Analyzer import Parser
-
+import sys
 
 # Define token types
 token_types = {
@@ -55,6 +55,9 @@ def tokenize(code):
             if not match:
                 print(f"Lexical error: Unexpected character '{line[position]}' on line {line_number}")
                 position += 1
+                sys.exit()
+
+        # tokens.append('END')
     return tokens
 
 
@@ -125,7 +128,7 @@ symbol_table = build_symbol_table(tokens)
 
 # Instantiate the parser with the list of tokens
 parser = Parser(tokens)
-print('Parsing:')
+print('\nParsing ....\n')
 # Parse the code
 parser.parse()
 
