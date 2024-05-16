@@ -1,5 +1,6 @@
 import re
 from Syntax_Analyzer import Parser
+from Semantic_Analyzer import SemanticAnalyzer
 import sys
 
 # Define token types
@@ -40,10 +41,11 @@ def tokenize(code):
                     token = match.group(0)
                     if token_type == 'Identifier':
                         prev_token_index = len(tokens) - 1
-                        if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE':
-                            data_type = tokens[prev_token_index][1] if tokens[prev_token_index][0] else None
-                        while position + len(token) < len(line) and  line[position + len(token)].isspace():
-                                position += 1
+                        data_type = None  # Default to None
+                        if prev_token_index >= 0 and tokens[prev_token_index][0] == 'DATA_TYPE' or tokens[prev_token_index][1] == 'Zero':
+                            data_type = tokens[prev_token_index][1]
+                        while position + len(token) < len(line) and line[position + len(token)].isspace():
+                            position += 1
                         if position + len(token) < len(line) and line[position + len(token)] == '(':
                             tokens.append(('FUNCTION', token, line_number, data_type))
                         else:
@@ -57,8 +59,8 @@ def tokenize(code):
                 position += 1
                 sys.exit()
 
-        # tokens.append('END')
     return tokens
+
 
 
 # Function to build the symbol table
@@ -78,13 +80,14 @@ def build_symbol_table(tokens):
                 'token_type': 'VARIABLE',
                 'data_type': current_data_type,
                 'line_number': line_number,
-                'value': None  # Default value for now, you can set it later
+                'value': None  
             }
-        elif token_type == 'LITERAL':
+        elif token_type == 'LITERAL' or token_type == 'CONSTANT':
             if current_name is None:
                 # print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
                 continue
-            symbol_table[current_name]['value'] = lexeme
+            if symbol_table[current_name]['token_type'] == 'VARIABLE':
+                symbol_table[current_name]['value'] = lexeme
             current_name = None  # Reset current_name after assigning value
         elif token_type == 'FUNCTION':
             current_name = lexeme
@@ -94,10 +97,11 @@ def build_symbol_table(tokens):
             data_type = data_type[0] if data_type else None
             symbol_table[current_name] = {
                 'token_type': 'FUNCTION',
-                'data_type': data_type,
+                'return_type': data_type,
                 'line_number': line_number,
-                'value': None  # Default value for now, you can set it later
+                'value': None  
             }
+
     return symbol_table
 
 
@@ -121,14 +125,16 @@ tokens = tokenize(code)
 # Build the symbol table
 symbol_table = build_symbol_table(tokens)
 
-
+      
 # print("Symbol Table:")
 # for lexeme, info in symbol_table.items():
 #     print(f"{lexeme}: {info}")
 
-# Instantiate the parser with the list of tokens
 parser = Parser(tokens)
 print('\nParsing ....\n')
 # Parse the code
 parser.parse()
 
+print('chek')
+semantic = SemanticAnalyzer(tokens, symbol_table)
+semantic.analyze()

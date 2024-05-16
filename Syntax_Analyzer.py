@@ -18,7 +18,7 @@ class Parser:
             self.advance()
         else:
             print(f"Syntax error: Expected {expected_token_type}, found {self.current_token[0] if self.current_token else 'EOF'} at line {self.current_token[2]}")
-            sys.exit()
+            
 
     def parse(self):
         self.program()
@@ -27,14 +27,14 @@ class Parser:
     def program(self):
         self.statement_list()
         print('No Syntax Error were found')
-        sys.exit()
+        
     def statement_list(self):
         while self.current_token:
             self.statement()
         if self.current_token == None and len(self.block_stack) > 0:
                 er = '}'
                 print(f"Syntax error: Missing {er} of Block at line {self.block_stack[-1][1]}")
-                sys.exit()
+                
         
 
     def statement(self):
@@ -66,7 +66,7 @@ class Parser:
             self.assignment()
         # elif self.current_token == 'END':
         #         print('No Syntax Error were found')
-        #         sys.exit()
+        #         
         elif self.current_token == None:
                 pass
         else:
@@ -145,13 +145,13 @@ class Parser:
                 self.match('VARIABLE')  
             else:
                 print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
-                sys.exit()
+                
                 # self.advance()
                 
         else:
             print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
             # self.advance()
-            sys.exit()
+            
             
 
     def loop_statement(self):
@@ -180,7 +180,7 @@ class Parser:
                 else:
                     print(f"Syntax error: Expected VARIABLE, found {self.current_token[1]} at line {self.current_token[2]}")
                     # self.advance()
-                    sys.exit()
+                    
             elif self.current_token[0] == 'VARIABLE':
                 self.match(self.current_token[0])
             elif self.current_token[0] == 'SEPERATOR':
@@ -191,7 +191,7 @@ class Parser:
             else:
                 print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
                 self.advance()
-                sys.exit()
+                
 
         if self.current_token and self.current_token[0] == 'RPAREN':
             self.match('RPAREN')
