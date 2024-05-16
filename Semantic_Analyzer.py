@@ -11,12 +11,12 @@ class SemanticAnalyzer:
         self.check_function_calls()
         self.check_data_type()
 
-        if self.errors:
-            print("\n\nSemantic Errors")
-            for error in self.errors:
-                print(error)
-        else:
-            print("No semantic errors were found.")
+        # if self.errors:
+        #     print("\n\nSemantic Errors")
+        #     for error in self.errors:
+        #         print(error)
+        # else:
+        #     print("No semantic errors were found.")
 
     def check_variable_usage(self):
         for token_type, lexeme, line_number, *data_type in self.tokens:
@@ -51,3 +51,5 @@ class SemanticAnalyzer:
                         continue
                     else:
                         self.errors.append(f"Semantic error: Variable '{lexeme}' is of type {info['data_type']} but not assigned correctly at line {info['line_number']}")
+
+    

@@ -5,6 +5,7 @@ class Parser:
         self.current_token_index = 0
         self.current_token = self.tokens[self.current_token_index] if self.tokens else None
         self.block_stack = []
+        self.errors = []
 
     def advance(self):
         self.current_token_index += 1
@@ -17,7 +18,8 @@ class Parser:
         if self.current_token and self.current_token[0] == expected_token_type or self.current_token == None:
             self.advance()
         else:
-            print(f"Syntax error: Expected {expected_token_type}, found {self.current_token[0] if self.current_token else 'EOF'} at line {self.current_token[2]}")
+            self.errors.append(f"Syntax error: Expected {expected_token_type}, found {self.current_token[0] if self.current_token else 'EOF'} at line {self.current_token[2]}")
+            # print(f"Syntax error: Expected {expected_token_type}, found {self.current_token[0] if self.current_token else 'EOF'} at line {self.current_token[2]}")
             
 
     def parse(self):
@@ -26,14 +28,14 @@ class Parser:
 
     def program(self):
         self.statement_list()
-        print('No Syntax Error were found')
         
     def statement_list(self):
         while self.current_token:
             self.statement()
         if self.current_token == None and len(self.block_stack) > 0:
                 er = '}'
-                print(f"Syntax error: Missing {er} of Block at line {self.block_stack[-1][1]}")
+                self.errors.append(f"Syntax error: Missing {er} of Block at line {self.block_stack[-1][1]}")
+                # print(f"Syntax error: Missing {er} of Block at line {self.block_stack[-1][1]}")
                 
         
 
@@ -70,7 +72,8 @@ class Parser:
         elif self.current_token == None:
                 pass
         else:
-            print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            # print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
             self.advance()
             
 
@@ -82,7 +85,9 @@ class Parser:
             self.function_call()
             return True
         else:
-            print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+
+            # print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
             #self.advance()
             return True
             
@@ -95,7 +100,9 @@ class Parser:
         else:
             self.match('VARIABLE')
             if self.current_token == None:
-                print('Syntax Error: Missing . at the end.')
+                self.errors.append('Syntax Error: Missing . at the end.')
+
+                # print('Syntax Error: Missing . at the end.')
             elif self.current_token[0] == 'STATEMENT_END':
                 self.match('STATEMENT_END')
             else:
@@ -144,6 +151,7 @@ class Parser:
             elif self.current_token[0] == 'VARIABLE':
                 self.match('VARIABLE')  
             else:
+                
                 print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
                 
                 # self.advance()

@@ -33,7 +33,7 @@ Zero @sum(Num @n1, Num @n2)
 
 Zero @sub(Num @n2)
 {
-   @res = @n2 .
+   @res = @n2 
 }
 Num @result = @sum(65, 7).
 
