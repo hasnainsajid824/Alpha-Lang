@@ -5,7 +5,7 @@ import sys
 
 # Define token types
 token_types = {
-    'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br)\b',
+    'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br|null)\b',
     'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
     'OPERATOR': r'(?:<=|>=|==|!=|\+\+|\-\-|\+|\-|\*|/|<|>)',
     'Identifier': r'@[_a-zA-Z][_a-zA-Z0-9]*',
@@ -73,7 +73,8 @@ def build_symbol_table(tokens):
         current_data_type = data_type[0] if data_type else None
         if token_type == 'VARIABLE':
             current_name = lexeme
-            if current_name in symbol_table:
+            if current_name in symbol_table or current_data_type == None:
+                current_name = None
                 # print(f"Error: Duplicate variable name '{current_name}' on line {line_number}")
                 continue
             symbol_table[current_name] = {
@@ -86,6 +87,7 @@ def build_symbol_table(tokens):
             if current_name is None:
                 # print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
                 continue
+            
             if symbol_table[current_name]['token_type'] == 'VARIABLE':
                 symbol_table[current_name]['value'] = lexeme
             current_name = None  # Reset current_name after assigning value
@@ -95,12 +97,13 @@ def build_symbol_table(tokens):
                 # print(f"Error: Duplicate function name '{current_name}' on line {line_number}")
                 continue
             data_type = data_type[0] if data_type else None
-            symbol_table[current_name] = {
-                'token_type': 'FUNCTION',
-                'return_type': data_type,
-                'line_number': line_number,
-                'value': None  
-            }
+            if data_type != None:
+                symbol_table[current_name] = {
+                    'token_type': 'FUNCTION',
+                    'return_type': data_type,
+                    'line_number': line_number,
+                    'value': None  
+                }   
 
     return symbol_table
 
@@ -126,15 +129,15 @@ tokens = tokenize(code)
 symbol_table = build_symbol_table(tokens)
 
       
-# print("Symbol Table:")
-# for lexeme, info in symbol_table.items():
-#     print(f"{lexeme}: {info}")
+print("Symbol Table:")
+for lexeme, info in symbol_table.items():
+    print(f"{lexeme}: {info}")
 
 parser = Parser(tokens)
 print('\nParsing ....\n')
 # Parse the code
 parser.parse()
 
-print('chek')
-semantic = SemanticAnalyzer(tokens, symbol_table)
+
+semantic = SemanticAnalyzer(symbol_table, tokens)
 semantic.analyze()

@@ -7,13 +7,12 @@ class SemanticAnalyzer:
         self.errors = []
 
     def analyze(self):
-        print('chek')
         self.check_variable_usage()
         self.check_function_calls()
-        self.check_function_definitions()
+        self.check_data_type()
 
         if self.errors:
-            print("Semantic errors:")
+            print("\n\nSemantic Errors")
             for error in self.errors:
                 print(error)
         else:
@@ -29,7 +28,26 @@ class SemanticAnalyzer:
             if token_type == 'FUNCTION' and lexeme not in self.symbol_table:
                 self.errors.append(f"Semantic error: Function '{lexeme}' called without definition at line {line_number}")
 
-    def check_function_definitions(self):
+    def check_data_type(self):
         for lexeme, info in self.symbol_table.items():
-            if info['token_type'] == 'FUNCTION' and info['value'] is None:
-                self.errors.append(f"Semantic error: Function '{lexeme}' declared but not defined at line {info['line_number']}")
+            if info['token_type'] == 'VARIABLE' and info['data_type'] != None and info['value'] != None:
+                if info['data_type'] == 'Num':
+                    if isinstance(int(info['value']), int):
+                        continue
+                    else:
+                        self.errors.append(f"Semantic error: Variable '{lexeme}' is of type {info['data_type']} but not assigned correctly at line {info['line_number']}")
+                elif info['data_type'] == 'Fl':
+                    if isinstance(float(info['value']), float):
+                        continue
+                    else:
+                        self.errors.append(f"Semantic error: Variable '{lexeme}' is of type {info['data_type']} but not assigned correctly at line {info['line_number']}")
+                elif info['data_type'] == 'Str':
+                    if isinstance(info['value'], str):
+                        continue
+                    else:
+                        self.errors.append(f"Semantic error: Variable '{lexeme}' is of type {info['data_type']} but not assigned correctly at line {info['line_number']}")
+                elif info['data_type'] == 'Bool':
+                    if info['value'] in ['true', 'false']:
+                        continue
+                    else:
+                        self.errors.append(f"Semantic error: Variable '{lexeme}' is of type {info['data_type']} but not assigned correctly at line {info['line_number']}")

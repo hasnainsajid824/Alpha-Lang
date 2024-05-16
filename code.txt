@@ -38,5 +38,5 @@ Zero @sub(Num @n2)
 Num @result = @sum(65, 7).
 
 Num @check.
-
+@s().
 @sum(5, 3).

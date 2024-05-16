@@ -205,9 +205,12 @@ class Parser:
     def function_call(self):
         self.match('FUNCTION')
         self.match('LPAREN')
-        while self.current_token[0] != 'RPAREN':
-            if self.argument_list():
-                break
+        if self.current_token[0] == 'RPAREN':
+            self.match('RPAREN')
+        else:
+            while self.current_token[0] != 'RPAREN':
+                if self.argument_list():
+                    break
         
     def function_definition(self):
         if self.current_token[1] == 'Zero':
