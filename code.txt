@@ -22,7 +22,7 @@ FR (Num @i = 0. @i < 10. @i ++)
 
 WH (@float_var < 10) 
 { 
-   @float_var = @float_var + 1.
+   @float_var = 1 + @float_var.
    cnt.
 }
 
@@ -33,7 +33,7 @@ Zero @sum(Num @n1, Num @n2)
 
 Zero @sub(Num @n2)
 {
-   @res = @n2 
+   @res = @n2.
 }
 Num @result = @sum(65, 7).
 

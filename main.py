@@ -42,7 +42,7 @@ def build_symbol_table(tokens):
             if data_type != None:
                 symbol_table[current_name] = {
                     'token_type': 'FUNCTION',
-                    'return_type': data_type,
+                    'data_type': data_type,
                     'line_number': line_number,
                     'value': None  
                 }   
@@ -78,7 +78,7 @@ symbol_table = build_symbol_table(tokens)
 #     print(f"{lexeme}: {info}")
 
 parser = Parser(tokens)
-print('\nParsing ....\n')
+# print('\nParsing ....\n')
 # Parse the code
 parser.parse()
 Errors.extend(parser.errors)

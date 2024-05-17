@@ -185,16 +185,18 @@ class Parser:
                 self.match(self.current_token[0])
                 if self.current_token[0] == 'VARIABLE':
                     self.match('VARIABLE')
+                    if self.current_token[0] != 'RPAREN':
+                        self.match('SEPERATOR')
                 else:
                     print(f"Syntax error: Expected VARIABLE, found {self.current_token[1]} at line {self.current_token[2]}")
                     # self.advance()
                     
             elif self.current_token[0] == 'VARIABLE':
                 self.match(self.current_token[0])
-            elif self.current_token[0] == 'SEPERATOR':
-                self.match(self.current_token[0])
             elif self.current_token[0] == 'LITERAL':
                 self.match(self.current_token[0])
+                if self.current_token[0] != 'RPAREN':
+                        self.match('SEPERATOR')
 
             else:
                 print(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")

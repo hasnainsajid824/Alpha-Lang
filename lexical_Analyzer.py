@@ -4,7 +4,7 @@ import re
 token_types = {
     'KEYWORD': r'\b(?:iif|ielif|ielse|FR|WH|Zero|cnt|br|null)\b',
     'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
-    'OPERATOR': r'(?:<=|>=|==|!=|\+\+|\-\-|\+|\-|\*|/|<|>)',
+    'OPERATOR': r'(?:<=|>=|==|!=|\+\+|\-\-|\+|\-|\*|/|<|>|%)',
     'Identifier': r'@[_a-zA-Z][_a-zA-Z0-9]*',
     'PROCEDURE': r'\b(?:FR|WH)\b',
     'CONSTANT': r'(?:\".*?\"|\'.*?\')',
