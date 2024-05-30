@@ -11,7 +11,7 @@ iif @n < 10{
 ielif @n > 10{
    @message = "Number is greater than 10".
 }
-ielse {
+ielse { 
    @message = "Number is 10".
 }
 
@@ -22,9 +22,9 @@ FR (Num @i = 0. @i < 10. @i ++)
 
 WH (@float_var < 10) 
 { 
-   @float_var = 1 + @float_var.
+   @float_var = 1 + '455'.
    cnt.
-}
+}  
 
 Zero @sum(Num @n1, Num @n2)
 {
