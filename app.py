@@ -6,7 +6,7 @@ from lexical_Analyzer import tokenize
 from Syntax_Analyzer import Parser
 from Semantic_Analyzer import SemanticAnalyzer
 from main import build_symbol_table
-
+from code_generator import CodeGenerator
 
 class CodeAnalyzerApp:
     def __init__(self, root):
@@ -70,7 +70,9 @@ class CodeAnalyzerApp:
                 self.results_display.insert(tk.END, error + '\n')
         else:
             self.results_display.config(foreground='green')
-            self.results_display.insert(tk.END, 'No Errors were found\n')
+            code_generator = CodeGenerator(symbol_table, tokens)
+            assembly_code = code_generator.generate()
+            self.results_display.insert(tk.END, assembly_code)
 
     def show_tokens(self):
         code = self.code_editor.get("1.0", tk.END).strip()
