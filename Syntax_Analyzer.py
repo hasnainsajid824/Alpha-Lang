@@ -278,6 +278,7 @@ class Parser:
         if self.current_token == None and len(self.block_stack) > 0:
             er = '}'
             self.errors.append(f"Syntax error: Missing {er} of Block at line {self.block_stack[-1][1]}")
+            return
 
     def statement(self):
         if self.current_token[0] == 'LCURLY':
@@ -310,7 +311,7 @@ class Parser:
         elif self.current_token == None:
             pass
         else:
-            self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
             self.advance()
 
     def expression(self):
@@ -321,7 +322,7 @@ class Parser:
             self.function_call()
             return True
         else:
-            self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
             return True
 
     def declaration(self):
@@ -380,7 +381,8 @@ class Parser:
             elif self.current_token[0] == 'VARIABLE':
                 self.match('VARIABLE')
         else:
-            self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+            pass
 
     def loop_statement(self):
         if self.current_token[1] == 'FR':
@@ -416,7 +418,7 @@ class Parser:
                 if self.current_token[0] != 'RPAREN':
                     self.match('SEPERATOR')
             else:
-                self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
                 self.advance()
 
         if self.current_token and self.current_token[0] == 'RPAREN':
@@ -434,8 +436,7 @@ class Parser:
     def function_definition(self):
         if self.current_token[1] == 'Zero':
             self.match('KEYWORD')
-        else:
-            self.match('DATA_TYPE')
+        
         self.match('FUNCTION')
         self.match('LPAREN')
         if self.current_token[0] != 'RPAREN':
@@ -461,7 +462,8 @@ class Parser:
             elif self.current_token[0] == 'SEPERATOR':
                 self.match('SEPERATOR')
             else:
-                self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                pass
         self.match('STATEMENT_END')
 
     def input_statement(self):
@@ -474,5 +476,6 @@ class Parser:
             elif self.current_token[0] == 'SEPERATOR':
                 self.match('SEPERATOR')
             else:
-                self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                # self.errors.append(f"Syntax error: Unexpected token {self.current_token[1]} at line {self.current_token[2]}")
+                pass
         self.match('STATEMENT_END')

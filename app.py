@@ -80,6 +80,7 @@ class CodeAnalyzerApp:
 
         self.results_display.delete("1.0", tk.END)
         if errors:
+            errors = set(errors)
             self.results_display.config(foreground='red')
             for error in errors:
                 self.results_display.insert(tk.END, error + '\n')
