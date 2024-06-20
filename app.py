@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext
 from tkinter import ttk
 from ttkthemes import ThemedTk
+from PIL import Image, ImageTk
 from lexical_Analyzer import tokenize
 from Syntax_Analyzer import Parser
 from Semantic_Analyzer import SemanticAnalyzer
@@ -15,48 +16,57 @@ class CodeAnalyzerApp:
         self.root = root
         self.root.title("AlphaLang")
 
-        # Apply the Equilux theme
         self.root.set_theme('equilux')
 
-        # Create a frame for better layout management
         mainframe = ttk.Frame(self.root, padding="10 10 10 10")
         mainframe.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
         # Heading for code editor
-        self.code_editor_label = ttk.Label(mainframe, text="Code Editor")
+        self.code_editor_label = ttk.Label(mainframe, text="Code Here ...", font=('Arial', 14))
         self.code_editor_label.grid(row=0, column=0, padx=10, pady=5, sticky='w')
 
         # Text widget for code editor
-        self.code_editor = scrolledtext.ScrolledText(mainframe, wrap=tk.WORD, width=60, height=30, background='#464646', foreground='#d3d3d3', insertbackground='white')
+        self.code_editor = scrolledtext.ScrolledText(mainframe, wrap=tk.WORD, width=80, height=20, background='#464646', foreground='#d3d3d3', insertbackground='white')
         self.code_editor.grid(row=1, column=0, padx=10, pady=5)
-
+        self.code_editor.focus()
         # Heading for results display
-        self.results_display_label = ttk.Label(mainframe, text="Output")
-        self.results_display_label.grid(row=0, column=1, padx=10, pady=5, sticky='w')
+        self.results_display_label = ttk.Label(mainframe, text="Output", font=('Arial', 12))
+        self.results_display_label.grid(row=3, column=0, padx=10, pady=5, sticky='w')
 
         # Text widget for results
-        self.results_display = scrolledtext.ScrolledText(mainframe, wrap=tk.WORD, width=60, height=30, background='#464646', foreground='#d3d3d3', insertbackground='white')
-        self.results_display.grid(row=1, column=1, padx=10, pady=5)
+        self.results_display = scrolledtext.ScrolledText(mainframe, wrap=tk.WORD, width=80, height=5, background='#464646', foreground='#d3d3d3', insertbackground='white')
+        self.results_display.grid(row=4, column=0, padx=10, pady=5)
 
-        # Run button
-        self.run_button = ttk.Button(mainframe, text="Run", command=self.run_analysis)
-        self.run_button.grid(row=2, column=0, padx=10, pady=10, sticky='w')
+        image = Image.open("run_btn.png")  
+        image = image.resize((25, 25))  
+        self.run_button_image = ImageTk.PhotoImage(image)
+
+        # Run button with image
+        self.run_button = ttk.Button(mainframe, text="Run", image=self.run_button_image, compound=tk.RIGHT, command=self.run_analysis)
+        self.run_button.grid(row=0, column=0, sticky='e')
+        # self.run_button = ttk.Button(mainframe, text="Run", command=self.run_analysis)
+        # self.run_button.grid(row=0, column=0, padx=10, pady=10, sticky='e')
 
         self.run_button = ttk.Button(mainframe, text="Assembly Code", command=self.show_assembly)
-        self.run_button.grid(row=2, column=0, padx=10, pady=10, sticky='e')
+        self.run_button.grid(row=3, column=0, padx=10, pady=10, sticky='e')
 
         # Show Tokens button
         self.tokens_button = ttk.Button(mainframe, text="Show Tokens", command=self.show_tokens,)
-        self.tokens_button.grid(row=2, column=1, padx=5, pady=10, sticky='w')
+        self.tokens_button.grid(row=2, column=0, padx=5, pady=10, sticky='w')
 
         # Show Symbol Table button
         self.symbol_table_button = ttk.Button(mainframe, text="Show Symbol Table", command=self.show_symbol_table,)
-        self.symbol_table_button.grid(row=2, column=1, padx=10, pady=10, sticky='e')
+        self.symbol_table_button.grid(row=2, column=0, padx=10, pady=10, sticky='e')
 
     def run_analysis(self):
         code = self.code_editor.get("1.0", tk.END).strip()
+        if not code:
+            self.results_display.delete("1.0", tk.END)
+            self.results_display.config(foreground='red')
+            self.results_display.insert(tk.END, "Error: Code editor is empty. Please enter some code.")
+
         tokens, errors = tokenize(code)
         symbol_table = build_symbol_table(tokens)
         
