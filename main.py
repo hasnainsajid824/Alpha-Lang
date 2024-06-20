@@ -2,7 +2,7 @@ import re
 from lexical_Analyzer import tokenize
 from Syntax_Analyzer import Parser
 from Semantic_Analyzer import SemanticAnalyzer
-
+from code_generator import CodeGenerator
 Errors = []
 
 # Function to build the symbol table
@@ -50,45 +50,44 @@ def build_symbol_table(tokens):
     return symbol_table
 
 
-# # Read code from a file
-# def read_code_from_file(filename):
-#     with open(filename, 'r') as file:
-#         code = file.read()
-#     return code
+# Read code from a file
+def read_code_from_file(filename):
+    with open(filename, 'r') as file:
+        code = file.read()
+    return code
 
 
 
-# code = read_code_from_file('code.txt')
+code = read_code_from_file('code.txt')
 
-# # Tokenize the code
-# tokens, error = tokenize(code)
 
-# Errors.extend(error)
+# Tokenize the code
+tokens, errors = tokenize(code)
 
-# # print("Tokens:-")
-# # for i in tokens:
-# #     print(i)
-
-# # Build the symbol table
-# symbol_table = build_symbol_table(tokens)
-
-      
-# # print("Symbol Table:")
-# # for lexeme, info in symbol_table.items():
-# #     print(f"{lexeme}: {info}")
-
-# parser = Parser(tokens)
-# # print('\nParsing ....\n')
-# # Parse the code
-# parser.parse()
-# Errors.extend(parser.errors)
-
-# semantic = SemanticAnalyzer(symbol_table, tokens)
-# semantic.analyze()
-# Errors.extend(semantic.errors)
-
-# if Errors:
-#     for i in Errors:
-#         print(i)
-# else:
-#     print('No Errors were found')
+if errors:
+    for error in errors:
+        print(error)
+else:
+    # Build the symbol table
+    symbol_table = build_symbol_table(tokens)
+    
+    # Parse the code
+    parser = Parser(tokens)
+    parser.parse()
+    
+    if parser.errors:
+        for error in parser.errors:
+            print(error)
+    else:
+        # Semantic analysis
+        semantic_analyzer = SemanticAnalyzer(symbol_table, tokens)
+        semantic_analyzer.analyze()
+        
+        if semantic_analyzer.errors:
+            for error in semantic_analyzer.errors:
+                print(error)
+        else:
+            code_generator = CodeGenerator(symbol_table, tokens)
+            assembly_code = code_generator.generate()
+            with open("output.asm", "w") as f:
+                f.write(assembly_code)

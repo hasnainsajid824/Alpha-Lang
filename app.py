@@ -13,7 +13,7 @@ from exec import AssemblyInterpreter
 class CodeAnalyzerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Code Analyzer")
+        self.root.title("AlphaLang")
 
         # Apply the Equilux theme
         self.root.set_theme('equilux')
