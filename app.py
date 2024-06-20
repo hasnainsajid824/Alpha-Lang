@@ -7,6 +7,8 @@ from Syntax_Analyzer import Parser
 from Semantic_Analyzer import SemanticAnalyzer
 from main import build_symbol_table
 from code_generator import CodeGenerator
+from exec import AssemblyInterpreter
+
 
 class CodeAnalyzerApp:
     def __init__(self, root):
@@ -39,8 +41,11 @@ class CodeAnalyzerApp:
         self.results_display.grid(row=1, column=1, padx=10, pady=5)
 
         # Run button
-        self.run_button = ttk.Button(mainframe, text="Run", style='Run.TButton', command=self.run_analysis)
+        self.run_button = ttk.Button(mainframe, text="Run", command=self.run_analysis)
         self.run_button.grid(row=2, column=0, padx=10, pady=10, sticky='w')
+
+        self.run_button = ttk.Button(mainframe, text="Assembly Code", command=self.show_assembly)
+        self.run_button.grid(row=2, column=0, padx=10, pady=10, sticky='e')
 
         # Show Tokens button
         self.tokens_button = ttk.Button(mainframe, text="Show Tokens", command=self.show_tokens,)
@@ -72,7 +77,33 @@ class CodeAnalyzerApp:
             self.results_display.config(foreground='green')
             code_generator = CodeGenerator(symbol_table, tokens)
             assembly_code = code_generator.generate()
-            self.results_display.insert(tk.END, assembly_code)
+            interpreter = AssemblyInterpreter()
+            interpreter.execute(assembly_code)
+            code = interpreter.debug()
+            code_str = "\n".join(f"{key}: {value}" for key, value in code.items())
+            self.results_display.insert(tk.END, code_str)
+   
+
+    
+    def show_assembly(self):
+        code = self.code_editor.get("1.0", tk.END).strip()
+        tokens, errors = tokenize(code)
+        symbol_table = build_symbol_table(tokens)
+        
+        parser = Parser(tokens)
+        parser.parse()
+        errors.extend(parser.errors)
+        
+        semantic = SemanticAnalyzer(symbol_table, tokens)
+        semantic.analyze()
+        errors.extend(semantic.errors)
+        code_generator = CodeGenerator(symbol_table, tokens)
+        assembly_code = code_generator.generate()
+        token_window = tk.Toplevel(self.root)
+        token_window.title("Assembly Language")
+        token_text = scrolledtext.ScrolledText(token_window, wrap=tk.WORD, width=80, height=30, background='#464646', foreground='#d3d3d3', insertbackground='white')
+        token_text.pack(padx=10, pady=10)
+        token_text.insert(tk.END, assembly_code)
 
     def show_tokens(self):
         code = self.code_editor.get("1.0", tk.END).strip()
