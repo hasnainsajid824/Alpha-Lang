@@ -6,7 +6,6 @@ token_types = {
     'DATA_TYPE': r'\b(?:Num|Fl|Str|Bool|Char)\b',
     'OPERATOR': r'(?:<=|>=|==|!=|\+\+|\-\-|\+|\-|\*|/|<|>|%)',
     'Identifier': r'@[_a-zA-Z][_a-zA-Z0-9]*',
-    'PROCEDURE': r'\b(?:FR|WH)\b',
     'CONSTANT': r'(?:\".*?\"|\'.*?\')',
     'LITERAL': r'\b(?:true|false|\d+\.\d*|\d+)\b',
     'ASSIGN': r'=',

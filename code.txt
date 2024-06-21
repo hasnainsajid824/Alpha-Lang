@@ -2,7 +2,6 @@ Num @num_var = 10.
 Fl @float_var = 3.14.
 Str @string_var = "Hello, world!".
 Bool @bool_var = true.
-@w = 3.
 Num @n = 10.
 Str @message = "".
 iif @n < 10{
@@ -22,7 +21,7 @@ FR (Num @i = 0. @i < 10. @i ++)
 
 WH (@float_var < 10) 
 { 
-   @float_var = 1 + '455'.
+   @float_var = 1 + 2.
    cnt.
 }  
 
@@ -35,8 +34,3 @@ Zero @sub(Num @n2)
 {
    @res = @n2.
 }
-Num @result = @sum(65, 7).
-
-Num @check.
-@s().
-@sum(5, 3).

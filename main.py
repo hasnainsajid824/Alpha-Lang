@@ -35,7 +35,7 @@ def build_symbol_table(tokens):
         elif token_type == 'FUNCTION':
             current_name = lexeme
             if current_name in symbol_table:
-                error.append(f"Error: Duplicate function name '{current_name}' on line {line_number}")
+                # error.append(f"Error: Duplicate function name '{current_name}' on line {line_number}")
                 continue
             data_type = data_type[0] if data_type else None
             if data_type != None:
