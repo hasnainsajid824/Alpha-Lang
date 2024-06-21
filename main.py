@@ -10,14 +10,14 @@ def build_symbol_table(tokens):
     symbol_table = {}
     current_data_type = None
     current_name = None
+    error = []
     for token_type, lexeme, line_number, *data_type in tokens:
         
         current_data_type = data_type[0] if data_type else None
         if token_type == 'VARIABLE':
             current_name = lexeme
-            if current_name in symbol_table or current_data_type == None:
+            if current_data_type == None:
                 current_name = None
-                # print(f"Error: Duplicate variable name '{current_name}' on line {line_number}")
                 continue
             symbol_table[current_name] = {
                 'token_type': 'VARIABLE',
@@ -27,16 +27,15 @@ def build_symbol_table(tokens):
             }
         elif token_type == 'LITERAL' or token_type == 'CONSTANT':
             if current_name is None:
-                # print(f"Error: Literal '{lexeme}' found without a preceding variable declaration on line {line_number}")
                 continue
             
-            if symbol_table[current_name]['token_type'] == 'VARIABLE':
+            if symbol_table[current_name]['token_type'] == 'VARIABLE' or current_name in symbol_table:
                 symbol_table[current_name]['value'] = lexeme
             current_name = None  # Reset current_name after assigning value
         elif token_type == 'FUNCTION':
             current_name = lexeme
             if current_name in symbol_table:
-                # print(f"Error: Duplicate function name '{current_name}' on line {line_number}")
+                error.append(f"Error: Duplicate function name '{current_name}' on line {line_number}")
                 continue
             data_type = data_type[0] if data_type else None
             if data_type != None:
@@ -47,7 +46,7 @@ def build_symbol_table(tokens):
                     'value': None  
                 }   
 
-    return symbol_table
+    return symbol_table, error
 
 
 # Read code from a file
@@ -63,31 +62,26 @@ code = read_code_from_file('code.txt')
 
 # Tokenize the code
 tokens, errors = tokenize(code)
+Errors.extend(errors)
 
-if errors:
-    for error in errors:
+
+# Build the symbol table
+symbol_table, symbol_table_errors = build_symbol_table(tokens)
+Errors.extend(symbol_table_errors)
+# Parse the code
+parser = Parser(tokens)
+parser.parse()
+Errors.extend(parser.errors)
+
+semantic_analyzer = SemanticAnalyzer(symbol_table, tokens)
+semantic_analyzer.analyze()
+Errors.extend(semantic_analyzer.errors)
+
+if Errors:
+    for error in Errors:
         print(error)
 else:
-    # Build the symbol table
-    symbol_table = build_symbol_table(tokens)
-    
-    # Parse the code
-    parser = Parser(tokens)
-    parser.parse()
-    
-    if parser.errors:
-        for error in parser.errors:
-            print(error)
-    else:
-        # Semantic analysis
-        semantic_analyzer = SemanticAnalyzer(symbol_table, tokens)
-        semantic_analyzer.analyze()
-        
-        if semantic_analyzer.errors:
-            for error in semantic_analyzer.errors:
-                print(error)
-        else:
-            code_generator = CodeGenerator(symbol_table, tokens)
-            assembly_code = code_generator.generate()
-            with open("output.asm", "w") as f:
-                f.write(assembly_code)
+    code_generator = CodeGenerator(symbol_table, tokens)
+    assembly_code = code_generator.generate()
+    with open("output.asm", "w") as f:
+        f.write(assembly_code)

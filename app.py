@@ -68,7 +68,8 @@ class CodeAnalyzerApp:
             self.results_display.insert(tk.END, "Error: Code editor is empty. Please enter some code.")
 
         tokens, errors = tokenize(code)
-        symbol_table = build_symbol_table(tokens)
+        symbol_table, symbol_table_errors = build_symbol_table(tokens)
+        errors.extend(symbol_table_errors)
         
         parser = Parser(tokens)
         parser.parse()
@@ -128,23 +129,48 @@ class CodeAnalyzerApp:
         token_text.pack(padx=10, pady=10)
         token_text.insert(tk.END, tokens_str)
 
+    def update_symbol_table(self, symbol_table, interpreter_variables):
+        for var_name, value in interpreter_variables.items():
+            if var_name in symbol_table:
+                symbol_table[var_name]['value'] = value
+        return symbol_table
+
+
     def show_symbol_table(self):
         code = self.code_editor.get("1.0", tk.END).strip()
         tokens, errors = tokenize(code)
-        symbol_table = build_symbol_table(tokens)
+        symbol_table, symbol_table_errors = build_symbol_table(tokens)
+        errors.extend(symbol_table_errors)
+        # Parse the code
+        parser = Parser(tokens)
+        parser.parse()
+        errors.extend(parser.errors)
 
-        symbol_table_window = tk.Toplevel(self.root)
-        symbol_table_window.title("Symbol Table")
-        columns = ('Lexeme', 'Token Type', 'Data Type', 'Line Number', 'Value')
-        tree = ttk.Treeview(symbol_table_window, columns=columns, show='headings')
-        for col in columns:
-            tree.heading(col, text=col)
-            tree.column(col, anchor='center', width=100)
+        semantic_analyzer = SemanticAnalyzer(symbol_table, tokens)
+        semantic_analyzer.analyze()
+        errors.extend(semantic_analyzer.errors)
 
-        for lexeme, info in symbol_table.items():
-            tree.insert('', tk.END, values=(lexeme, info['token_type'], info['data_type'], info['line_number'], info['value']))
+        if errors:
+            for error in Errors:
+                print(error)
+        else:
+            code_generator = CodeGenerator(symbol_table, tokens)
+            assembly_code = code_generator.generate()
+            interpreter = AssemblyInterpreter()
+            interpreter.execute(assembly_code)
+            symbol_table = self.update_symbol_table(symbol_table, interpreter.debug())
+            symbol_table_window = tk.Toplevel(self.root)
+            symbol_table_window.title("Symbol Table")
+            columns = ('Lexeme', 'Token Type', 'Data Type', 'Line Number', 'Value')
+            tree = ttk.Treeview(symbol_table_window, columns=columns, show='headings')
+            for col in columns:
+                tree.heading(col, text=col)
+                tree.column(col, anchor='center', width=100)
 
-        tree.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+            for lexeme, info in symbol_table.items():
+                tree.insert('', tk.END, values=(lexeme, info['token_type'], info['data_type'], info['line_number'], info['value']))
+
+            tree.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
 if __name__ == "__main__":
     root = ThemedTk(theme="equilux")
